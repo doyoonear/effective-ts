@@ -88,39 +88,102 @@ const x: number = null;
 - 오류가 있을때 컴파일하지 않으려면 tsconfig.json에 noEmitOnError를 설정하거나 빌드 도구에 동일하게 적용하면 된다.
 <br/>
 
-### 런타임에는 타입 체크가 불가능
+### 런타임에는 타입 체크가 불가능하다
 
 ```
 interface Square {
-
+  width: number;
 }
+interface Rectangle extends Square {
+  height: number;
+}
+type Shape = Square | Rectangle;
 
+function calculateArea(shape: Shape) {
+  if (shape instanceof Rectangle) {
+                    // ~~~~~~~~~ 'Rectangle' only refers to a type,
+                    //           but is being used as a value here
+    return shape.width * shape.height;
+                    //         ~~~~~~ Property 'height' does not exist
+                    //                on type 'Shape'
+  } else {
+    return shape.width * shape.width;
+  }
+}
 ```
 
 instanceof 체크는 런타임에 일어나지만, `Rectangle` 은 타입이기 때문에 런타임 시점에 아무런 역할을 할 수 없다. 실제로 자바스크립트로 컴파일되는 과정에서 모든 인터페이스, 타입, 타입구문은 제거되어 버린다.
 
 의도했던대로 `shape`의 타입을 명확하게 하려면 런타임에 타입 정보를 유지하는 방법이 필요하다. 
-방법 1: 'height' 속성이 존재하는지 체크해보는 방법
+
+### 런타임에 타입 정보를 유지하는 방법
+
+__방법 1: 'height' 속성이 존재하는지 체크해보는 방법__
 
 ```
 function calculateArea(shape: Shape) {
-
+  if ('height' in shape) {
+    shape;  // Type is Rectangle
+    return shape.width * shape.height;
+  } else {
+    shape;  // Type is Square
+    return shape.width * shape.width;
+  }
 }
 ```
 - 속성 체크는 런타임에 접근 가능한 값에만 관련되지만, 타입 체커 역시도 shape의 타입을 Rectangle로 보정해주기 때문에 오류가 사라진다.
 
-방법 2: 런타임에 접근 가능한 타입 정보를 명시적으로 저장하는 '태그' 기법
+<br/>
+
+__방법 2: 런타임에 접근 가능한 타입 정보를 명시적으로 저장하는 '태그' 기법__
+
 ```
 interface Square {
-    kind: 'square';
-    width: number;
+  kind: 'square';
+  width: number;
 }
+interface Rectangle {
+  kind: 'rectangle';
+  height: number;
+  width: number;
+}
+type Shape = Square | Rectangle;
+
+function calculateArea(shape: Shape) {
+  if (shape.kind === 'rectangle') {
+    shape;  // Type is Rectangle
+    return shape.width * shape.height;
+  } else {
+    shape;  // Type is Square
+    return shape.width * shape.width;
+  }
+}
+
 ```
 - Shape 타입은 태그된 유니온(tagged union)의 예이다. 이 기법을 사용하면 런타임에 타입 정보를 손쉽게 유지할 수 있다.
+<br/>
 
-방법 3: 타입을 클래스로 만드는 방법
+__방법 3: 타입을 클래스로 만드는 방법__
 ```
+class Square {
+  constructor(public width: number) {}
+}
+class Rectangle extends Square {
+  constructor(public width: number, public height: number) {
+    super(width);
+  }
+}
+type Shape = Square | Rectangle;
 
+function calculateArea(shape: Shape) {
+  if (shape instanceof Rectangle) {
+    shape;  // Type is Rectangle
+    return shape.width * shape.height;
+  } else {
+    shape;  // Type is Square
+    return shape.width * shape.width;  // OK
+  }
+}
 ```
 
 인터페이스는 타입으로만 사용 가능하지만, Rectangle을 클래스로 선언하면 타입과 값으로 모두 사용할 수 있으므로 오류가 없다.
