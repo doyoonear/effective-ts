@@ -15,13 +15,11 @@ let city = 'new york';
 console.log(city.toUpperCase());  
 ```
 
-**타입 추론**
-<br/>
+### 타입 추론
 
 위 예시에서 타입 체커는 toUpperCase 부분에서 문제점을 찾아낸다. city에 따로 타입 구문으로 타입을 명시하지 않아도 타입 체커는 초깃값으로 타입을 추론하여 string 형식에는 toUpperCase 속성이 없다는 에러를 보여준다.
 
-**타입 구문을 통해 코드에 의도를 표시한다**
-<br/>
+### 타입 구문을 통해 코드에 의도를 표시한다
 
 이처럼 타입 시스템의 목표 중 하나는 런타임에 오류를 발생시킬 코드를 미리 찾아내는 것이다. 타입스크립트가 '정적' 타입 시스템이라는것은 바로 이런 특성을 말하는 것이다. 
 타입스크립트는 타입 구문 없이도 오류를 잡을 수 있지만, 타입 구문을 추가한다면 더 많은 오류를 찾아낼 수 있다.
@@ -33,3 +31,39 @@ console.log(city.toUpperCase());
 ## 🪑 item2. 타입스크립트 설정 이해하기
 
 ### 타입스크립트 설정 방법
+1. command line 사용 시
+- `tsc --noImplicitAny program.ts`
+
+2. tsconfig.json 설정 파일을 사용하는 방법
+
+```
+  {
+    "compilerOptions": {
+      "noImplicitAny": true
+    }
+  }
+```
+
+### 설정에서 가장 중요한 두 가지 - `noImplicitAny`, `strictNullChecks`
+
+**`noImplicitAny`** <br/>
+```
+function add(a, b) {
+  return a + b;
+}
+
+```
+- 위 예시처럼 매개변수에 타입을 지정하지 않았을 때, 매개변수 a, b는 암시적으로 'any' 형식이 포함된다.
+- 이러한 경우를 암시적 any(implicit any) 라고 부른다.
+- 타입스크립트가 명시적인 타입 정보를 가질 때, 문제를 발견하기 쉬워지기 때문에 되도록이면 noImplicitAny를 설정해야한다.
+
+**`strictNullChecks`** <br/>
+
+null과 undefined가 모든 타입에서 허용되는지 확인하는 설정이다.
+
+```
+const x: number = null;
+```
+
+- 위의 코드는 strictNullChecks가 해제되어있을때는 유효한 코드이고, 설정되어있을때는 오류가 난다.
+- 'null' 형식은 'number' 형식에 할당할 수 없다는 에러가 발생한다. 
